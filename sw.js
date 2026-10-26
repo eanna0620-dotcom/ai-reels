@@ -1,8 +1,8 @@
 /* Service worker прототипа 1win Reels.
-   Ролики (videos/*.mp4): cache-first — один раз скачали, дальше всегда из кэша.
+   Ролики (*.mp4): cache-first — один раз скачали, дальше всегда из кэша.
    Страница: stale-while-revalidate — открывается из кэша и тихо обновляется в фоне.
    Чтобы сбросить кэш после замены роликов, увеличьте номер версии ниже. */
-const CACHE = 'reels-v1';
+const CACHE = 'reels-v7';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -22,7 +22,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
 
-  if (url.pathname.includes('/videos/')) {
+  if (url.pathname.endsWith('.mp4')) {
     // ключ кэша — сам адрес, без заголовка Range: страница запрашивает файл целиком
     e.respondWith((async () => {
       const c = await caches.open(CACHE);
