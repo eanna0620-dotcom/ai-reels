@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=393, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>1win Reels — ставка на концовку</title>
+<title>1win Reels — ставка на концовку · v8</title>
 <script>
 /* Режимы: десктоп — макет 393×852 целиком (со статус-баром и панелью браузера);
    телефон — свой статус-бар и панель браузера, а ролик растягивается на всю доступную высоту.
@@ -818,9 +818,11 @@ function play() {
 /* ---------- разблокировка видео по первому касанию ----------
    iPhone в режиме энергосбережения (и некоторые Android) запрещают автозапуск даже без звука:
    тогда видео стартует при первом касании экрана */
+let unlocked = false;
 ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => {
-  pool.forEach(v => { if (v.src && v.paused) { const p = v.play(); if (p) p.then(() => { if (v !== video || !running()) v.pause(); }).catch(() => {}); } });
-  if (video && running()) play();
+  if (video && running() && video.paused) play();
+  if (unlocked) return; unlocked = true;
+  pool.forEach(v => { if (v !== video && v.src && v.paused) { v.muted = true; const p = v.play(); if (p) p.then(() => v.pause()).catch(() => {}); } });
 }, { capture: true, passive: true }));
 
 /* ---------- фоновая подгрузка: после старта первого ролика по одному скачиваем остальные ---------- */
@@ -845,6 +847,7 @@ soundBtn.addEventListener('click', () => { muted = !muted; store.set('muted', mu
 /* ---------- стрелка → история ставок ---------- */
 let histReached = false;
 function openHistory() {
+  renderRows();
   $('#hist').classList.remove('closed');
   scroller.classList.add('hist-mode'); histReached = false;
   lastHistoryAt = Date.now();
@@ -1106,7 +1109,7 @@ function setPhase(p) {
     }
   } else if (tutPauseDone) ui.classList.remove('tut');
   // подсказка «Свайпни вверх» пока отключена (вернуть: if (p === 'result') showSwipeHint(p);)
-  if (p === 'pick') { clock = T.pauseAt; if (video) { video.pause(); if (video.readyState) video.currentTime = vTime(); } }
+  if (p === 'pick') { clock = T.pauseAt; if (video) video.pause(); } // без перемотки: она давала мигание кадра на iPhone
 }
 
 optsEl.addEventListener('click', e => {
@@ -1275,7 +1278,8 @@ function renderRows() {
   more.disabled = !left; more.textContent = left ? `Показать еще ${Math.min(10, left)}` : 'Показать еще';
   freshRow = null; updateSbar();
 }
-function pushLive(r) { live.unshift(r); live = live.slice(0, 80); freshRow = r; if (tab === 'live') renderRows(); }
+// пока история закрыта, строки не перерисовываем — лишняя работа мешала видео на телефоне
+function pushLive(r) { live.unshift(r); live = live.slice(0, 80); freshRow = r; if (tab === 'live' && scroller.classList.contains('hist-mode')) renderRows(); }
 const list = $('#list'), sbar = $('#sbar');
 function updateSbar() {
   const max = list.scrollHeight - list.clientHeight;
