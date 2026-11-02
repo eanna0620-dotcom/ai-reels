@@ -2,7 +2,7 @@
    Ролики (*.mp4): cache-first — один раз скачали, дальше всегда из кэша.
    Страница: stale-while-revalidate — открывается из кэша и тихо обновляется в фоне.
    Чтобы сбросить кэш после замены роликов, увеличьте номер версии ниже. */
-const CACHE = 'reels-v40';
+const CACHE = 'reels-gl-v3';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
